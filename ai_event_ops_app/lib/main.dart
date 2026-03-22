@@ -135,33 +135,35 @@ class _ChatScreenState extends State<ChatScreen> {
           .toList();
 
       setState(() {
-        if (confidence == 'answer') {
-          _messages.add(ChatMessage(
-            role: 'assistant',
-            text: answer,
-            citations: citations,
-            confidence: confidence,
-            reason: null,
-          ));
-        } else {
-          _messages.add(ChatMessage(
-            role: 'assistant',
-            text: 'I can’t answer that from the provided documents.',
-            citations: const [],
-            confidence: 'escalate',
-            reason: reason ?? 'Information not found in provided documents.',
-          ));
-        }
-      });
+  if (confidence == 'answer') {
+    _messages.add(ChatMessage(
+      role: 'assistant',
+      text: answer,
+      citations: citations,
+      confidence: confidence,
+      reason: null,
+    ));
+  } else {
+    final friendlyReason = _friendlyReason(reason);
+
+    _messages.add(ChatMessage(
+      role: 'assistant',
+      text: 'I couldn’t find a reliable answer to that in the event documents.',
+      citations: const [],
+      confidence: 'escalate',
+      reason: friendlyReason,
+    ));
+  }
+});
       _scrollToBottom();
     } catch (e) {
       setState(() {
         _messages.add(ChatMessage(
-          role: 'assistant',
-          text: 'Network/parse error.',
-          confidence: 'escalate',
-          reason: e.toString(),
-        ));
+  role: 'assistant',
+  text: 'Something went wrong while contacting the assistant.',
+  confidence: 'escalate',
+  reason: 'Please try again in a moment.',
+));
       });
       _scrollToBottom();
     } finally {
@@ -207,24 +209,24 @@ class _ChatScreenState extends State<ChatScreen> {
             crossAxisAlignment:
                 isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
             children: [
-              Text(msg.text),
-              if (!isUser && msg.confidence == 'answer' && msg.citations.isNotEmpty)
-                Padding(
-                  padding: const EdgeInsets.only(top: 10),
-                  child: _citationsView(msg.citations),
-                ),
-              if (!isUser && msg.confidence == 'escalate' && msg.reason != null)
-                Padding(
-                  padding: const EdgeInsets.only(top: 10),
-                  child: Text(
-                    'Escalation reason: ${msg.reason}',
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.error,
-                      fontSize: 12,
-                    ),
-                  ),
-                ),
-            ],
+  Text(msg.text),
+  if (!isUser && msg.confidence == 'answer' && msg.citations.isNotEmpty)
+    Padding(
+      padding: const EdgeInsets.only(top: 10),
+      child: _citationsView(msg.citations),
+    ),
+  if (!isUser && msg.confidence == 'escalate' && msg.reason != null)
+    Padding(
+      padding: const EdgeInsets.only(top: 10),
+      child: Text(
+        'Helpful note: ${msg.reason}',
+        style: TextStyle(
+          color: Theme.of(context).colorScheme.error,
+          fontSize: 12,
+        ),
+      ),
+    ),
+],
           ),
         ),
       ),
@@ -308,4 +310,18 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 }
+String _friendlyReason(String? rawReason) {
+  if (rawReason == null || rawReason.isEmpty) {
+    return 'Try asking about build-up, breakdown, deliveries, stand power, health and safety, or speaker logistics.';
+  }
 
+  if (rawReason.contains('Low retrieval confidence')) {
+    return 'That question doesn’t seem to relate to the exhibitor manual. Try asking about event operations, logistics, or rules.';
+  }
+
+  if (rawReason.contains('insufficient context')) {
+    return 'I couldn’t find enough detail in the documents to answer that. Try being more specific.';
+  }
+
+  return rawReason; // fallback
+}
