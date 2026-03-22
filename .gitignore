@@ -1,0 +1,19 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+
+# Flutter
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+build/
+
+# IDE
+.vscode/
+.idea/
+.DS_Store
+
+# Generated files
+index.json
+*.log
