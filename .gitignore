@@ -14,6 +14,13 @@ build/
 .idea/
 .DS_Store
 
-# Generated files
+# Private docs (DO NOT COMMIT)
+indexer/real_docs/
+indexer/docs/
+
+# Generated index (can contain sensitive content)
 index.json
+backend/index.json
+
+# Logs
 *.log
